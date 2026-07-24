@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Zourleb",
+    "slug": "zourleb",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "zourleb",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1f8a5b"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zourleb.app"
+    },
+    "android": {
+      "package": "com.zourleb.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#1f8a5b"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": ["expo-router", "expo-localization", "expo-secure-store"],
+    "extra": {
+      "apiBaseUrl": "http://localhost:8080/api/v1"
+    }
+  }
+}

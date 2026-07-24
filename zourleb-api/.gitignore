@@ -1,0 +1,8 @@
+/bin/
+/uploads/
+*.exe
+.env
+.env.local
+*.log
+vendor/
+.DS_Store
