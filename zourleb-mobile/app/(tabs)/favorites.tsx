@@ -1,7 +1,7 @@
-import { FlatList, Text } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
-import { apiData } from "@/api/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiData, apiDelete, apiList } from "@/api/client";
 import { useAuth } from "@/stores/auth";
 import { SignInPrompt } from "@/components/SignInPrompt";
 import { TourCard } from "@/components/TourCard";
@@ -14,24 +14,34 @@ interface FavoritesPayload {
 
 export default function Favorites() {
   const user = useAuth((s) => s.user);
+  const queryClient = useQueryClient();
 
-  // The backend returns favorite tour ids; we resolve them to cards via the
-  // public catalog (filtered client-side here for simplicity).
-  const { data: favIds } = useQuery({
+  const { data: favPayload } = useQuery({
     queryKey: ["favorite-ids"],
     queryFn: () => apiData<FavoritesPayload>("/favorites"),
     enabled: !!user,
   });
 
-  const { data: tours, isLoading } = useQuery({
-    queryKey: ["favorite-tours", favIds?.tour_ids],
+  const favIds = new Set(favPayload?.tour_ids ?? []);
+
+  const { data: allTours, isLoading } = useQuery({
+    queryKey: ["favorite-tours", favPayload?.tour_ids],
     queryFn: async () => {
-      const env = await apiData<TourCardType[]>("/tours", { per_page: 100 });
-      const ids = new Set(favIds?.tour_ids ?? []);
-      return env.filter((t) => ids.has(t.id));
+      const result = await apiList<TourCardType>("/tours", { per_page: 100 });
+      return result.items;
     },
-    enabled: !!user && !!favIds,
+    enabled: !!user && !!favPayload,
   });
+
+  const removeFav = useMutation({
+    mutationFn: (tourId: number) => apiDelete(`/favorites/${tourId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favorite-ids"] });
+      queryClient.invalidateQueries({ queryKey: ["favorite-tours"] });
+    },
+  });
+
+  const favoriteTours = (allTours ?? []).filter((t) => favIds.has(t.id));
 
   if (!user) {
     return (
@@ -48,11 +58,26 @@ export default function Favorites() {
         <Loading />
       ) : (
         <FlatList
-          data={tours ?? []}
+          data={favoriteTours}
           keyExtractor={(t) => String(t.id)}
-          renderItem={({ item }) => <TourCard tour={item} />}
-          contentContainerClassName="px-4 pb-8"
-          ListEmptyComponent={<EmptyState message="No favorites yet. Tap ♥ on a tour to save it." />}
+          renderItem={({ item }) => (
+            <View className="px-4">
+              <TourCard
+                tour={item}
+                isFavorited={true}
+                onFavChange={(tourId, nowFaved) => {
+                  if (!nowFaved) removeFav.mutate(tourId);
+                }}
+              />
+            </View>
+          )}
+          contentContainerClassName="pb-8"
+          ListEmptyComponent={
+            <EmptyState
+              icon="♡"
+              message="No favorites yet. Tap the heart on a tour to save it."
+            />
+          }
         />
       )}
     </SafeAreaView>

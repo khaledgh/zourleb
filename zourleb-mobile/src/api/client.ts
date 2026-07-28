@@ -152,3 +152,8 @@ export async function apiList<T>(
   const env = await apiGet<T[]>(url, params);
   return { items: env.data ?? [], meta: env.meta };
 }
+
+export async function apiDelete(url: string): Promise<void> {
+  await raw.delete(url);
+}
+

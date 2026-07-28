@@ -159,3 +159,62 @@ export interface Booking {
   contact_phone: string;
   created_at: string;
 }
+
+export interface BookingTraveler {
+  id: number;
+  full_name: string;
+  traveler_type: string;
+}
+
+export interface BookingDetail extends Booking {
+  tour_slug: string;
+  travelers: BookingTraveler[];
+  departure_start: string | null;
+  departure_end: string | null;
+  notes: string;
+}
+
+export interface Notification {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  created_at: string;
+  data?: Record<string, unknown>;
+}
+
+export interface Review {
+  id: number;
+  tour_id: number;
+  user_id: number;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface AgencyTour {
+  id: number;
+  slug: string;
+  title: string;
+  type: string;
+  duration_days: number;
+  status: string;
+  price_from: number;
+  currency: string;
+  cover: string;
+}
+
+export interface AgencyProfile {
+  id: number;
+  slug: string;
+  name: string;
+  logo: string;
+  cover: string;
+  email: string;
+  phone: string;
+  website: string;
+  status: string;
+  verified: boolean;
+}

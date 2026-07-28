@@ -38,15 +38,34 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false }}>
+            {/* Tourist tabs */}
             <Stack.Screen name="(tabs)" />
+            {/* Auth flow */}
             <Stack.Screen name="(auth)" />
+            {/* Agency portal — modal stack from Profile */}
+            <Stack.Screen
+              name="(agency)"
+              options={{ presentation: "modal", headerShown: false }}
+            />
+            {/* Tour detail */}
             <Stack.Screen
               name="tour/[slug]"
               options={{ headerShown: true, title: "" }}
             />
+            {/* 3-step booking flow */}
             <Stack.Screen
               name="booking/[slug]"
               options={{ headerShown: true, title: "Booking", presentation: "modal" }}
+            />
+            {/* Booking detail */}
+            <Stack.Screen
+              name="booking-detail/[code]"
+              options={{ headerShown: true, title: "Booking Detail" }}
+            />
+            {/* Edit profile */}
+            <Stack.Screen
+              name="edit-profile"
+              options={{ headerShown: true, title: "Edit Profile", presentation: "modal" }}
             />
           </Stack>
         </QueryClientProvider>

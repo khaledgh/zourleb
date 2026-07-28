@@ -1,0 +1,20 @@
+1. Go API Backend
+Open a terminal and run:
+
+powershell
+cd c:\zourleb\zourleb-api
+go run ./cmd/api
+(Alternatively, you can run make run)
+
+2. React Admin Dashboard
+Open a new terminal and run:
+
+powershell
+cd c:\zourleb\zourleb-admin
+npm run dev
+3. Expo Mobile App
+Open a third terminal and run:
+
+powershell
+cd c:\zourleb\zourleb-mobile
+npx expo start

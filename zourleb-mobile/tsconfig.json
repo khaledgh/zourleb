@@ -7,7 +7,12 @@
       "@/*": [
         "src/*"
       ]
-    }
+    },
+    "jsx": "react-native",
+    "moduleResolution": "bundler",
+    "module": "preserve",
+    "moduleDetection": "force",
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts",
