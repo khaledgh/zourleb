@@ -13,9 +13,9 @@ import type { Language } from "@/types/api";
 export default function Profile() {
   const { t, i18n } = useTranslation();
   const router = useRouter();
-  const user = useAuth((s) => s.user);
-  const logout = useAuth((s) => s.logout);
-  const isAgency = useAuth((s) => s.isAgency);
+  const user = useAuth((s: any) => s.user);
+  const logout = useAuth((s: any) => s.logout);
+  const isAgency = useAuth((s: any) => s.isAgency);
   const [langs, setLangs] = useState<Language[]>([]);
 
   useEffect(() => {
@@ -89,13 +89,32 @@ export default function Profile() {
               />
             </View>
           </Card>
-        ) : null}
+        ) : (
+          <Card className="mt-4 p-4">
+            <View className="flex-row items-center gap-3">
+              <Text className="text-2xl">🏢</Text>
+              <View className="flex-1">
+                <Text className="text-base font-semibold text-gray-900">Register your Agency</Text>
+                <Text className="text-sm text-gray-500">
+                  Apply to become an agency on Zourleb and publish your tours.
+                </Text>
+              </View>
+            </View>
+            <View className="mt-3">
+              <Button
+                title="Apply as Agency"
+                variant="outline"
+                onPress={() => router.push("/apply-agency")}
+              />
+            </View>
+          </Card>
+        )}
 
         {/* Language picker */}
         <Card className="mt-4 p-4">
           <Text className="mb-3 text-base font-semibold text-gray-900">Language</Text>
           <View className="flex-row flex-wrap gap-2">
-            {langs.map((l) => (
+            {langs.map((l: any) => (
               <Pressable
                 key={l.code}
                 onPress={() => onPickLanguage(l.code)}

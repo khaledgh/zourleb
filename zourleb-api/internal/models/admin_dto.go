@@ -98,3 +98,43 @@ type AnalyticsSummary struct {
 	ActiveBoosts int64           `json:"active_boosts"`
 	Revenue   map[string]float64 `json:"revenue"`
 }
+
+type AdminCreateUserRequest struct {
+	Name     string   `json:"name" validate:"required,min=2,max=120"`
+	Email    string   `json:"email" validate:"required,email"`
+	Phone    string   `json:"phone" validate:"omitempty,lb_phone"`
+	Password string   `json:"password" validate:"required,min=6"`
+	Status   string   `json:"status" validate:"required,oneof=active blocked"`
+	Roles    []string `json:"roles"`
+}
+
+type AdminUpdateUserRequest struct {
+	Name     *string   `json:"name" validate:"omitempty,min=2,max=120"`
+	Email    *string   `json:"email" validate:"omitempty,email"`
+	Phone    *string   `json:"phone" validate:"omitempty,lb_phone"`
+	Password *string   `json:"password" validate:"omitempty,min=6"`
+	Status   *string   `json:"status" validate:"omitempty,oneof=active blocked"`
+	Roles    *[]string `json:"roles"`
+}
+
+type AdminCreateAgencyRequest struct {
+	Name             string  `json:"name" validate:"required,min=2,max=160"`
+	Email            string  `json:"email" validate:"required,email"`
+	Phone            string  `json:"phone" validate:"required,lb_phone"`
+	RegionID         *uint   `json:"region_id"`
+	Website          string  `json:"website" validate:"omitempty,max=255"`
+	Status           string  `json:"status" validate:"required,oneof=pending approved suspended"`
+	SubscriptionTier string  `json:"subscription_tier" validate:"omitempty,max=32"`
+	CommissionRate   float64 `json:"commission_rate" validate:"min=0,max=100"`
+}
+
+type AdminUpdateAgencyRequest struct {
+	Name             *string  `json:"name" validate:"omitempty,min=2,max=160"`
+	Email            *string  `json:"email" validate:"omitempty,email"`
+	Phone            *string  `json:"phone" validate:"omitempty,lb_phone"`
+	RegionID         *uint    `json:"region_id"`
+	Website          *string  `json:"website" validate:"omitempty,max=255"`
+	Status           *string  `json:"status" validate:"omitempty,oneof=pending approved suspended"`
+	SubscriptionTier *string  `json:"subscription_tier" validate:"omitempty,max=32"`
+	CommissionRate   *float64 `json:"commission_rate" validate:"omitempty,min=0,max=100"`
+}

@@ -28,12 +28,6 @@ type OTPService struct {
 func NewOTPService(repo *repository.OTPRepository, users *repository.UserRepository, c cache.Store, disp *otp.Dispatcher, cfg config.OTPConfig) *OTPService {
 	return &OTPService{repo: repo, users: users, cache: c, disp: disp, cfg: cfg}
 }
-
-type otpState struct {
-	CodeHash string
-	Attempts int
-}
-
 func codeKey(p string) string     { return "otp:code:" + p }
 func cooldownKey(p string) string { return "otp:cooldown:" + p }
 func attemptKey(p string) string  { return "otp:attempts:" + p }

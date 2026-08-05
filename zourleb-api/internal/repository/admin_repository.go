@@ -106,3 +106,38 @@ func (r *AdminRepository) Count(model interface{}, where ...interface{}) (int64,
 	err := q.Count(&n).Error
 	return n, err
 }
+
+func (r *AdminRepository) DeleteUser(id uint) error {
+	return r.db.Delete(&models.User{}, id).Error
+}
+
+func (r *AdminRepository) ClearUserRoles(userID uint) error {
+	return r.db.Where("user_id = ?", userID).Delete(&models.UserRole{}).Error
+}
+
+func (r *AdminRepository) DeleteAgency(id uint) error {
+	return r.db.Delete(&models.Agency{}, id).Error
+}
+
+func (r *AdminRepository) ListTours(p pagination.Params, search, status string) ([]models.Tour, int64, error) {
+	q := r.db.Model(&models.Tour{}).Preload("Translations")
+	if status != "" {
+		q = q.Where("status = ?", status)
+	}
+	if search != "" {
+		like := "%" + search + "%"
+		q = q.Where("id IN (?) OR slug LIKE ?",
+			r.db.Model(&models.TourTranslation{}).
+				Select("tour_id").
+				Where("title LIKE ? OR summary LIKE ?", like, like),
+			like,
+		)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	var rows []models.Tour
+	err := q.Order("created_at desc").Offset(p.Offset()).Limit(p.Limit()).Find(&rows).Error
+	return rows, total, err
+}

@@ -235,6 +235,84 @@ func (h *AdminHandler) SetUserStatus(c echo.Context) error {
 	return response.OK(c, map[string]string{"status": req.Status})
 }
 
+func (h *AdminHandler) CreateUser(c echo.Context) error {
+	var req models.AdminCreateUserRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	u, err := h.admin.CreateUser(req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.Created(c, u)
+}
+
+func (h *AdminHandler) UpdateUser(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	var req models.AdminUpdateUserRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	u, err := h.admin.UpdateUser(id, req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, u)
+}
+
+func (h *AdminHandler) DeleteUser(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	if err := h.admin.DeleteUser(id); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"deleted": true})
+}
+
+func (h *AdminHandler) CreateAgency(c echo.Context) error {
+	var req models.AdminCreateAgencyRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	a, err := h.admin.CreateAgency(req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.Created(c, a)
+}
+
+func (h *AdminHandler) UpdateAgency(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	var req models.AdminUpdateAgencyRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	a, err := h.admin.UpdateAgency(id, req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, a)
+}
+
+func (h *AdminHandler) DeleteAgency(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	if err := h.admin.DeleteAgency(id); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"deleted": true})
+}
+
 // --- Boosts & payments ---
 
 func (h *AdminHandler) PendingBoosts(c echo.Context) error {
@@ -243,6 +321,14 @@ func (h *AdminHandler) PendingBoosts(c echo.Context) error {
 		return response.Fail(c, err)
 	}
 	return response.OK(c, rows)
+}
+
+func (h *AdminHandler) ListTours(c echo.Context) error {
+	rows, meta, err := h.admin.ListTours(pagination.FromQuery(c), c.QueryParam("q"), c.QueryParam("status"))
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OKMeta(c, rows, meta)
 }
 
 func (h *AdminHandler) ConfirmPayment(c echo.Context) error {

@@ -18,6 +18,7 @@ export const NAV: NavItem[] = [
   { to: "/languages", labelKey: "nav.languages", icon: "🌐", roles: ["super_admin"] },
   { to: "/translations", labelKey: "nav.translations", icon: "🔤", roles: ["super_admin"] },
   { to: "/settings", labelKey: "nav.settings", icon: "⚙", roles: ["super_admin"] },
+  { to: "/tours", labelKey: "nav.all_tours", icon: "🧭", roles: ["super_admin"] },
   // Agency portal items (rendered when the user has an agency role)
   { to: "/agency/tours", labelKey: "nav.tours", icon: "🧭", roles: ["agency_owner", "agency_staff"] },
   { to: "/agency/bookings", labelKey: "nav.bookings", icon: "🎫", roles: ["agency_owner", "agency_staff"] },

@@ -13,7 +13,7 @@
 | **Super Admin** (platform owner) | Web + Mobile | Approve/suspend agencies, manage languages & translations, manage boost packages & banners, toggle modules (e.g. Shop), see platform analytics & revenue, manage commission rates, moderate reviews. |
 | **Agency Owner** | Web + Mobile | Manage agency profile, invite staff, create/publish tours, manage departures & pricing, upload past‑tour galleries, buy boosts, manage shop products, view bookings & payouts. |
 | **Agency Staff** (manager / editor) | Web + Mobile | Scoped subset of owner actions via RBAC (e.g. editor can draft tours but not buy boosts). |
-| **Tourist** | Mobile (primary) + Web (browse) | Discover tours, favorite, register/book, verify phone, pay, review, get push notifications. |
+| **Tourist** | Mobile (primary) + Web (browse) | Discover tours, favorite, register/book, verify phone, pay, review, get push notifications, and apply to register an agency. |
 | **Guest** | Mobile + Web | Browse public catalog before auth. |
 
 RBAC is **role + permission** based (not hard‑coded roles) so new permission sets can be added without code changes.
@@ -304,8 +304,8 @@ All under `/api/v1`. Locale resolved from `Accept-Language` or `?locale=`. Pagin
 - **Expo Router**, **NativeWind** (Tailwind for RN), **React Query**, `react-hook-form + zod`.
 - **i18next + expo-localization**, RTL via `I18nManager`, bundle from `GET /i18n/:locale` cached locally.
 - **OneSignal** SDK + secure token storage (`expo-secure-store`).
-- **Two faces in one app:** *Tourist* experience by default; *Agency* portal unlocked when the signed‑in user has an agency role (mode switch) — so agencies manage tours/bookings/boosts on mobile too.
-- Screens: Home (banners/featured), Search & filters, Tour detail (gallery, itinerary, dates, prices, reviews), Booking flow with **phone OTP**, My bookings (with e‑voucher/QR), Favorites, Agency profile, Notifications, Profile/Language/Currency.
+- Two faces in one app: *Tourist* experience by default; *Agency* portal unlocked when the signed‑in user has an agency role (mode switch) — so agencies manage tours/bookings/boosts on mobile too. Tourists can also submit an application to register a new agency directly from the Profile screen.
+- Screens: Home (banners/featured), Search & filters, Tour detail (gallery, itinerary, dates, prices, reviews), Booking flow with **phone OTP**, My bookings (with e‑voucher/QR), Favorites, Agency profile, Agency registration/application form, Notifications, Profile/Language/Currency.
 - Offline‑friendly: cache catalog & i18n; queue‑safe booking submission with idempotency keys.
 
 ---
@@ -368,7 +368,7 @@ All under `/api/v1`. Locale resolved from `Accept-Language` or `?locale=`. Pagin
 Repo + CI, Docker, config, migrations & seeds (languages ar/fr/en, super admin, default settings), response/error envelope, auth skeleton (email + Google + JWT), RBAC, i18n bundle endpoint, storage & image upload, OneSignal wiring.
 
 **Phase 1 — MVP (bookable marketplace)**
-Agencies (apply → approve), tours + translations + images (incl. **past‑gallery**), departures & prices, public catalog + `/home` + banners (manual), search/filters, **booking with phone OTP** (WhatsApp/SMS), email/Google auth, tourist app + agency portal (web & mobile), OneSignal events, base multi‑language.
+Agencies (apply from web/mobile → approve), tours + translations + images (incl. **past‑gallery**), departures & prices, public catalog + `/home` + banners (manual), search/filters, **booking with phone OTP** (WhatsApp/SMS), email/Google auth, tourist app + agency portal (web & mobile), OneSignal events, base multi‑language.
 
 **Phase 2 — Monetization & trust**
 Boost packages + boost purchase + payment provider(s) incl. manual/offline, boosted home/featured injection, impressions/clicks, agency analytics, reviews & ratings, agency verification, commission ledger.

@@ -8,6 +8,11 @@
         "src/*"
       ]
     },
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "jsx": "react-native",
     "moduleResolution": "bundler",
     "module": "preserve",

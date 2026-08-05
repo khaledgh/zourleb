@@ -145,6 +145,9 @@ func registerAdmin(g *echo.Group, c *app.Container) {
 	ad := g.Group("/admin", c.Auth.Required())
 
 	ad.GET("/agencies", c.Admin.ListAgencies, c.Auth.RequirePermission("admin.agency.approve"))
+	ad.POST("/agencies", c.Admin.CreateAgency, c.Auth.RequirePermission("admin.agency.approve"))
+	ad.PUT("/agencies/:id", c.Admin.UpdateAgency, c.Auth.RequirePermission("admin.agency.approve"))
+	ad.DELETE("/agencies/:id", c.Admin.DeleteAgency, c.Auth.RequirePermission("admin.agency.approve"))
 	ad.POST("/agencies/:id/approve", c.Admin.ApproveAgency, c.Auth.RequirePermission("admin.agency.approve"))
 
 	ad.GET("/languages", c.Admin.Languages, c.Auth.RequirePermission("admin.language.manage"))
@@ -168,7 +171,12 @@ func registerAdmin(g *echo.Group, c *app.Container) {
 	ad.POST("/reviews/:id/moderate", c.Admin.ModerateReview, c.Auth.RequirePermission("admin.review.moderate"))
 
 	ad.GET("/users", c.Admin.ListUsers, c.Auth.RequirePermission("admin.user.manage"))
+	ad.POST("/users", c.Admin.CreateUser, c.Auth.RequirePermission("admin.user.manage"))
+	ad.PUT("/users/:id", c.Admin.UpdateUser, c.Auth.RequirePermission("admin.user.manage"))
+	ad.DELETE("/users/:id", c.Admin.DeleteUser, c.Auth.RequirePermission("admin.user.manage"))
 	ad.POST("/users/:id/status", c.Admin.SetUserStatus, c.Auth.RequirePermission("admin.user.manage"))
+
+	ad.GET("/tours", c.Admin.ListTours, c.Auth.RequirePermission("admin.user.manage"))
 
 	ad.GET("/boosts/pending", c.Admin.PendingBoosts, c.Auth.RequirePermission("admin.boost.manage"))
 	ad.POST("/payments/confirm", c.Admin.ConfirmPayment, c.Auth.RequirePermission("admin.boost.manage"))

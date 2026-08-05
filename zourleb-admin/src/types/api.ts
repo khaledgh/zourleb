@@ -118,3 +118,17 @@ export interface AnalyticsSummary {
   active_boosts: number;
   revenue: Record<string, number>;
 }
+
+export interface Category {
+  id: number;
+  slug: string;
+  icon: string;
+  name: string;
+}
+
+export interface Region {
+  id: number;
+  slug: string;
+  name: string;
+  parent_id: number | null;
+}

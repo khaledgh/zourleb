@@ -51,7 +51,7 @@ export function Button({
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Card({ children, className = "" }: { children?: ReactNode; className?: string }) {
   return (
     <View className={`rounded-2xl border border-gray-100 bg-white ${className}`}>
       {children}
@@ -107,7 +107,7 @@ export function Field({
   error,
 }: {
   label: string;
-  children: ReactNode;
+  children?: ReactNode;
   error?: string;
 }) {
   return (
@@ -149,10 +149,10 @@ export function StarRating({
   showNumber?: boolean;
 }) {
   const full = Math.floor(rating);
-  const stars = Array.from({ length: 5 }, (_, i) => (i < full ? "★" : "☆"));
+  const stars = Array.from({ length: 5 }, (_: any, i: number) => (i < full ? "★" : "☆"));
   return (
     <View className="flex-row items-center gap-0.5">
-      {stars.map((s, i) => (
+      {stars.map((s: any, i: number) => (
         <Text key={i} style={{ fontSize: size, lineHeight: size + 4 }} className={i < full ? "text-amber-400" : "text-gray-300"}>
           {s}
         </Text>

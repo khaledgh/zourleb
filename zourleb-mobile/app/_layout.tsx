@@ -13,7 +13,7 @@ import { Loading } from "@/components/ui";
 // Root layout: initializes i18n + restores the session, then renders the stack.
 // Auth gating is handled per-group (see app/(tabs)/_layout.tsx and (auth)).
 export default function RootLayout() {
-  const bootstrap = useAuth((s) => s.bootstrap);
+  const bootstrap = useAuth((s: any) => s.bootstrap);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -66,6 +66,11 @@ export default function RootLayout() {
             <Stack.Screen
               name="edit-profile"
               options={{ headerShown: true, title: "Edit Profile", presentation: "modal" }}
+            />
+            {/* Apply as agency */}
+            <Stack.Screen
+              name="apply-agency"
+              options={{ headerShown: true, title: "Apply as Agency", presentation: "modal" }}
             />
           </Stack>
         </QueryClientProvider>

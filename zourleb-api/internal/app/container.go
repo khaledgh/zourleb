@@ -97,7 +97,7 @@ func New(cfg *config.Config, db *gorm.DB, log *slog.Logger) *Container {
 	agencySvc := service.NewAgencyService(agencyRepo, tourRepo, bookingRepo, userRepo, cfg.App.DefaultLang)
 	boostSvc := service.NewBoostService(boostRepo, paymentRepo, payReg)
 	uploadSvc := service.NewUploadService(store0)
-	adminSvc := service.NewAdminService(adminRepo, agencyRepo, i18nRepo, engageRepo, boostRepo, paymentRepo, settingsSvc, boostSvc)
+	adminSvc := service.NewAdminService(adminRepo, agencyRepo, userRepo, i18nRepo, engageRepo, boostRepo, paymentRepo, settingsSvc, boostSvc)
 	shopSvc := service.NewShopService(shopRepo, cfg.App.DefaultLang)
 
 	// --- middleware ---

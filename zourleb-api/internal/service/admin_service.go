@@ -2,11 +2,14 @@ package service
 
 import (
 	"context"
+	"strings"
 
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/repository"
+	"github.com/zourleb/zourleb-api/pkg/hash"
 	"github.com/zourleb/zourleb-api/pkg/pagination"
 	"github.com/zourleb/zourleb-api/pkg/response"
+	"github.com/zourleb/zourleb-api/pkg/slug"
 )
 
 // AdminService implements the super-admin surface: approvals, languages,
@@ -15,6 +18,7 @@ import (
 type AdminService struct {
 	admin    *repository.AdminRepository
 	agencies *repository.AgencyRepository
+	users    *repository.UserRepository
 	i18n     *repository.I18nRepository
 	engage   *repository.EngagementRepository
 	boosts   *repository.BoostRepository
@@ -26,6 +30,7 @@ type AdminService struct {
 func NewAdminService(
 	admin *repository.AdminRepository,
 	agencies *repository.AgencyRepository,
+	users *repository.UserRepository,
 	i18n *repository.I18nRepository,
 	engage *repository.EngagementRepository,
 	boosts *repository.BoostRepository,
@@ -34,7 +39,7 @@ func NewAdminService(
 	boostSvc *BoostService,
 ) *AdminService {
 	return &AdminService{
-		admin: admin, agencies: agencies, i18n: i18n, engage: engage,
+		admin: admin, agencies: agencies, users: users, i18n: i18n, engage: engage,
 		boosts: boosts, payments: payments, settings: settings, boostSvc: boostSvc,
 	}
 }
@@ -215,6 +220,152 @@ func (s *AdminService) ListUsers(p pagination.Params, search string) ([]models.U
 
 func (s *AdminService) SetUserStatus(id uint, status string) error {
 	return wrapInternal(s.admin.SetUserStatus(id, status))
+}
+
+func (s *AdminService) CreateUser(req models.AdminCreateUserRequest) (*models.User, error) {
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	if _, err := s.users.FindByEmail(email); err == nil {
+		return nil, response.ErrEmailTaken
+	}
+
+	pw, err := hash.Password(req.Password)
+	if err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+
+	u := &models.User{
+		Name:         strings.TrimSpace(req.Name),
+		Email:        email,
+		Phone:        req.Phone,
+		PasswordHash: &pw,
+		Status:       req.Status,
+	}
+	if err := s.users.Create(u); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+
+	for _, roleKey := range req.Roles {
+		if roleID, err := s.users.RoleIDByKey(roleKey); err == nil {
+			_ = s.users.AssignRole(u.ID, roleID, nil)
+		}
+	}
+	return u, nil
+}
+
+func (s *AdminService) UpdateUser(id uint, req models.AdminUpdateUserRequest) (*models.User, error) {
+	u, err := s.users.FindByID(id)
+	if err != nil {
+		return nil, response.ErrNotFound
+	}
+	if req.Name != nil {
+		u.Name = strings.TrimSpace(*req.Name)
+	}
+	if req.Email != nil {
+		email := strings.ToLower(strings.TrimSpace(*req.Email))
+		if email != u.Email {
+			if _, err := s.users.FindByEmail(email); err == nil {
+				return nil, response.ErrEmailTaken
+			}
+			u.Email = email
+		}
+	}
+	if req.Phone != nil {
+		u.Phone = *req.Phone
+	}
+	if req.Password != nil && *req.Password != "" {
+		pw, err := hash.Password(*req.Password)
+		if err != nil {
+			return nil, response.ErrInternal.Wrap(err)
+		}
+		u.PasswordHash = &pw
+	}
+	if req.Status != nil {
+		u.Status = *req.Status
+	}
+	if err := s.users.Update(u); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+
+	if req.Roles != nil {
+		_ = s.admin.ClearUserRoles(u.ID)
+		for _, roleKey := range *req.Roles {
+			if roleID, err := s.users.RoleIDByKey(roleKey); err == nil {
+				_ = s.users.AssignRole(u.ID, roleID, nil)
+			}
+		}
+	}
+	return u, nil
+}
+
+func (s *AdminService) DeleteUser(id uint) error {
+	return wrapInternal(s.admin.DeleteUser(id))
+}
+
+func (s *AdminService) CreateAgency(req models.AdminCreateAgencyRequest) (*models.Agency, error) {
+	a := &models.Agency{
+		Slug:             slug.MakeUnique(req.Name),
+		Name:             strings.TrimSpace(req.Name),
+		Email:            strings.ToLower(req.Email),
+		Phone:            req.Phone,
+		RegionID:         req.RegionID,
+		Website:          req.Website,
+		Status:           req.Status,
+		SubscriptionTier: req.SubscriptionTier,
+		CommissionRate:   req.CommissionRate,
+		Verified:         req.Status == models.AgencyStatusApproved,
+	}
+	if err := s.agencies.Create(a); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	return a, nil
+}
+
+func (s *AdminService) UpdateAgency(id uint, req models.AdminUpdateAgencyRequest) (*models.Agency, error) {
+	a, err := s.agencies.FindByID(id)
+	if err != nil {
+		return nil, response.ErrNotFound
+	}
+	if req.Name != nil {
+		a.Name = strings.TrimSpace(*req.Name)
+	}
+	if req.Email != nil {
+		a.Email = strings.ToLower(*req.Email)
+	}
+	if req.Phone != nil {
+		a.Phone = *req.Phone
+	}
+	if req.RegionID != nil {
+		a.RegionID = req.RegionID
+	}
+	if req.Website != nil {
+		a.Website = *req.Website
+	}
+	if req.Status != nil {
+		a.Status = *req.Status
+		a.Verified = *req.Status == models.AgencyStatusApproved
+	}
+	if req.SubscriptionTier != nil {
+		a.SubscriptionTier = *req.SubscriptionTier
+	}
+	if req.CommissionRate != nil {
+		a.CommissionRate = *req.CommissionRate
+	}
+	if err := s.agencies.Save(a); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	return a, nil
+}
+
+func (s *AdminService) DeleteAgency(id uint) error {
+	return wrapInternal(s.admin.DeleteAgency(id))
+}
+
+func (s *AdminService) ListTours(p pagination.Params, search, status string) ([]models.Tour, pagination.Meta, error) {
+	rows, total, err := s.admin.ListTours(p, search, status)
+	if err != nil {
+		return nil, pagination.Meta{}, response.ErrInternal.Wrap(err)
+	}
+	return rows, pagination.NewMeta(p, total), nil
 }
 
 // --- Boost approvals / payment confirmation ---
