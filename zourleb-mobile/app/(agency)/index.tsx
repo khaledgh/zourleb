@@ -77,7 +77,7 @@ export default function AgencyDashboard() {
       />
       <Pressable
         onPress={() => router.push("/(agency)/bookings")}
-        className="rounded-2xl border border-gray-100 bg-white p-4 active:opacity-80"
+        className="mb-5 rounded-2xl border border-gray-100 bg-white p-4 active:opacity-80"
       >
         <Text className="text-sm text-gray-600">
           Track customer bookings across all your tours.
@@ -89,6 +89,39 @@ export default function AgencyDashboard() {
         ) : (
           <Text className="mt-2 text-sm font-semibold text-brand-600">View all →</Text>
         )}
+      </Pressable>
+
+      {/* Other agency sections */}
+      <View className="mb-5 flex-row flex-wrap gap-3">
+        <AgencyTile
+          icon="👥"
+          label="Members"
+          onPress={() => router.push("/(agency)/members")}
+        />
+        <AgencyTile
+          icon="🚀"
+          label="Boosts"
+          onPress={() => router.push("/(agency)/boosts")}
+        />
+        <AgencyTile
+          icon="🛍️"
+          label="Products"
+          onPress={() => router.push("/(agency)/products")}
+        />
+        <AgencyTile
+          icon="✏️"
+          label="Edit"
+          onPress={() => router.push("/(agency)/edit-agency")}
+        />
+      </View>
+
+      <Pressable
+        onPress={() => router.push("/(agency)/new-tour")}
+        className="rounded-2xl border border-brand-200 bg-brand-50 p-4 active:opacity-80"
+      >
+        <Text className="text-center text-base font-semibold text-brand-700">
+          + Create a new tour
+        </Text>
       </Pressable>
     </ScrollView>
   );
@@ -113,5 +146,25 @@ function StatTile({
       </Text>
       <Text className="mt-0.5 text-xs text-gray-500">{label}</Text>
     </View>
+  );
+}
+
+function AgencyTile({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: string;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-1 items-center justify-center rounded-2xl border border-gray-100 bg-white p-4 active:opacity-80"
+    >
+      <Text className="text-2xl">{icon}</Text>
+      <Text className="mt-2 text-sm font-semibold text-gray-900">{label}</Text>
+    </Pressable>
   );
 }

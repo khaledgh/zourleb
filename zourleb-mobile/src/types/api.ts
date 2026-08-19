@@ -106,6 +106,7 @@ export interface TourDetail extends TourCard {
   past_gallery: TourImage[];
   departures: TourDeparture[];
   prices: TourPrice[];
+  status: string;
 }
 
 export interface Category {
@@ -217,4 +218,57 @@ export interface AgencyProfile {
   website: string;
   status: string;
   verified: boolean;
+  about: string;
+  description: string;
+}
+
+export interface AgencyMember {
+  agency_id: number;
+  user_id: number;
+  role_id: number;
+  invited_at: string | null;
+  joined_at: string | null;
+}
+
+export interface BoostPackage {
+  id: number;
+  name: string;
+  placement: string;
+  price: number;
+  currency: string;
+  duration_days: number;
+}
+
+export interface AgencyBoost {
+  id: number;
+  package_id: number;
+  tour_id: number | null;
+  placement: string;
+  status: string;
+  starts_at: string | null;
+  ends_at: string | null;
+}
+
+export interface ProductCard {
+  id: number;
+  slug: string;
+  name: string;
+  price: number;
+  currency: string;
+  stock: number;
+  cover: string;
+  agency_id: number;
+}
+
+export interface ProductDetail extends ProductCard {
+  description: string;
+  images: TourImage[];
+}
+
+export interface Order {
+  id: number;
+  code: string;
+  status: string;
+  subtotal: number;
+  currency: string;
 }

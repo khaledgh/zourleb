@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/labstack/echo/v4"
 
+	"github.com/zourleb/zourleb-api/internal/middleware"
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/service"
 	"github.com/zourleb/zourleb-api/pkg/response"
@@ -67,6 +68,27 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 		return response.Fail(c, err)
 	}
 	return response.OK(c, res)
+}
+
+// EmailVerify handles POST /auth/email/verify.
+func (h *AuthHandler) EmailVerify(c echo.Context) error {
+	var req models.EmailVerifyRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	if err := h.auth.VerifyEmail(c.Request().Context(), req.Token); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"verified": true})
+}
+
+// EmailResend handles POST /auth/email/resend for the authenticated user.
+func (h *AuthHandler) EmailResend(c echo.Context) error {
+	userID := middleware.UserID(c)
+	if err := h.auth.RequestEmailVerification(c.Request().Context(), userID); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"sent": true})
 }
 
 // Logout handles POST /auth/logout.

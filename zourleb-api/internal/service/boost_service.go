@@ -14,11 +14,13 @@ import (
 type BoostService struct {
 	boosts   *repository.BoostRepository
 	payments *repository.PaymentRepository
+	agencies *repository.AgencyRepository
 	payReg   *payment.Registry
+	notify   *NotificationService
 }
 
-func NewBoostService(b *repository.BoostRepository, p *repository.PaymentRepository, reg *payment.Registry) *BoostService {
-	return &BoostService{boosts: b, payments: p, payReg: reg}
+func NewBoostService(b *repository.BoostRepository, p *repository.PaymentRepository, a *repository.AgencyRepository, reg *payment.Registry, n *NotificationService) *BoostService {
+	return &BoostService{boosts: b, payments: p, agencies: a, payReg: reg, notify: n}
 }
 
 // Packages lists available boost packages.
@@ -139,7 +141,17 @@ func (s *BoostService) activate(b *models.Boost, pkg *models.BoostPackage, payme
 	if err := s.boosts.Save(b); err != nil {
 		return response.ErrInternal.Wrap(err)
 	}
+	if s.notify != nil {
+		if a, err := s.agencies.FindByID(b.AgencyID); err == nil && a.CreatedBy != 0 {
+			s.notify.Notify(context.Background(), a.CreatedBy, "boost.activated", "Boost active", "Your boost for placement "+pkg.Placement+" is now live.", map[string]any{"boost_id": b.ID, "placement": pkg.Placement, "duration_days": pkg.DurationDays})
+		}
+	}
 	return nil
+}
+
+// TrackImpression increments a boost's impression counter.
+func (s *BoostService) TrackImpression(boostID uint) error {
+	return wrapInternal(s.boosts.IncrImpressions(boostID))
 }
 
 // TrackClick increments a boost's click counter.

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"strings"
 
 	"github.com/zourleb/zourleb-api/internal/models"
@@ -18,11 +19,12 @@ type AgencyService struct {
 	tours    *repository.TourRepository
 	bookings *repository.BookingRepository
 	users    *repository.UserRepository
+	notify   *NotificationService
 	defLang  string
 }
 
-func NewAgencyService(a *repository.AgencyRepository, t *repository.TourRepository, b *repository.BookingRepository, u *repository.UserRepository, defLang string) *AgencyService {
-	return &AgencyService{agencies: a, tours: t, bookings: b, users: u, defLang: defLang}
+func NewAgencyService(a *repository.AgencyRepository, t *repository.TourRepository, b *repository.BookingRepository, u *repository.UserRepository, n *NotificationService, defLang string) *AgencyService {
+	return &AgencyService{agencies: a, tours: t, bookings: b, users: u, notify: n, defLang: defLang}
 }
 
 // Apply registers a new agency (pending approval) and makes the caller its
@@ -122,20 +124,20 @@ func (s *AgencyService) CreateTour(agencyID, userID uint, req models.SaveTourReq
 		cur = "USD"
 	}
 	t := &models.Tour{
-		AgencyID:     agencyID,
-		Slug:         slug.MakeUnique(title),
-		CategoryID:   req.CategoryID,
-		RegionID:     req.RegionID,
-		Type:         req.Type,
-		DurationDays: req.DurationDays,
-		Difficulty:   req.Difficulty,
-		MinAge:       req.MinAge,
-		MaxCapacity:  req.MaxCapacity,
-		BaseCurrency: cur,
-		Status:       models.TourStatusDraft,
-		IsShowcase:   req.IsShowcase,
+		AgencyID:       agencyID,
+		Slug:           slug.MakeUnique(title),
+		CategoryID:     req.CategoryID,
+		RegionID:       req.RegionID,
+		Type:           req.Type,
+		DurationDays:   req.DurationDays,
+		Difficulty:     req.Difficulty,
+		MinAge:         req.MinAge,
+		MaxCapacity:    req.MaxCapacity,
+		BaseCurrency:   cur,
+		Status:         models.TourStatusDraft,
+		IsShowcase:     req.IsShowcase,
 		StartsFromDate: req.StartsFromDate,
-		CreatedBy:    userID,
+		CreatedBy:      userID,
 	}
 	if err := s.tours.Create(t); err != nil {
 		return nil, response.ErrInternal.Wrap(err)
@@ -212,6 +214,10 @@ func (s *AgencyService) Publish(agencyID, tourID uint, publish bool) error {
 	}
 	if err := s.tours.Save(t); err != nil {
 		return response.ErrInternal.Wrap(err)
+	}
+	if publish && t.CreatedBy != 0 && s.notify != nil {
+		title := s.tours.TitleFor(t.ID, s.defLang, s.defLang)
+		s.notify.Notify(context.Background(), t.CreatedBy, "tour.published", "Tour published", "Your tour "+title+" is now live.", map[string]any{"tour_id": t.ID, "tour_title": title})
 	}
 	return nil
 }

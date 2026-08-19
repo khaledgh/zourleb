@@ -23,11 +23,12 @@ const (
 
 // Well-known setting keys (feature flags & platform defaults).
 const (
-	SettingShopEnabled    = "shop.enabled"
-	SettingReviewsEnabled = "reviews.enabled"
-	SettingBoostEnabled   = "boost.enabled"
+	SettingShopEnabled     = "shop.enabled"
+	SettingReviewsEnabled  = "reviews.enabled"
+	SettingBoostEnabled    = "boost.enabled"
 	SettingDefaultCurrency = "default_currency"
-	SettingBookingOTP     = "booking.require_otp"
+	SettingBookingOTP      = "booking.require_otp"
+	SettingBookingEmail    = "booking.require_email"
 )
 
 // Language is a supported UI/content language, managed by the super admin.

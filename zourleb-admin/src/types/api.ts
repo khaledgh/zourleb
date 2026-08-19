@@ -110,6 +110,30 @@ export interface Boost {
   clicks: number;
 }
 
+export interface Payment {
+  id: number;
+  amount: number;
+  currency: string;
+  status: string;
+  provider: string;
+  payable_type: string;
+  payable_id: number;
+  payer_type: string;
+  payer_id: number;
+  created_at: string;
+}
+
+export interface AuditLog {
+  id: number;
+  actor_id: number | null;
+  action: string;
+  target_type: string;
+  target_id: number;
+  payload: Record<string, unknown> | null;
+  ip: string;
+  created_at: string;
+}
+
 export interface AnalyticsSummary {
   users: number;
   agencies: number;

@@ -6,11 +6,13 @@ import { useState } from "react";
 import { apiData } from "@/api/client";
 import { TourCard } from "@/components/TourCard";
 import { Loading, SectionHeader } from "@/components/ui";
+import { useFavoriteIds } from "@/lib/favorites";
 import type { HomePayload } from "@/types/api";
 
 export default function Home() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const { ids: favIds } = useFavoriteIds();
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["home"],
@@ -46,14 +48,14 @@ export default function Home() {
                   <SectionHeader title="⚡ Last Minute Deals" />
                 </View>
                 <View className="px-4">
-                  <TourCard tour={item} />
+                  <TourCard tour={item} isFavorited={favIds.has(item.id)} />
                 </View>
               </>
             );
           }
           return (
             <View className="px-4">
-              <TourCard tour={item} />
+              <TourCard tour={item} isFavorited={favIds.has(item.id)} />
             </View>
           );
         }}

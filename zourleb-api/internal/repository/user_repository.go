@@ -59,6 +59,13 @@ func (r *UserRepository) TouchLogin(id uint) error {
 		Update("last_login_at", now).Error
 }
 
+// MarkEmailVerified sets email_verified_at to now.
+func (r *UserRepository) MarkEmailVerified(id uint) error {
+	now := time.Now()
+	return r.db.Model(&models.User{}).Where("id = ?", id).
+		Update("email_verified_at", now).Error
+}
+
 // AssignRole attaches a (possibly agency-scoped) role to a user, ignoring dups.
 func (r *UserRepository) AssignRole(userID, roleID uint, agencyID *uint) error {
 	ur := models.UserRole{UserID: userID, RoleID: roleID, AgencyID: agencyID}

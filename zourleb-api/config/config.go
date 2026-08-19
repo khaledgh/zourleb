@@ -22,6 +22,7 @@ type Config struct {
 	SMS      SMSConfig
 	Storage  StorageConfig
 	OTP      OTPConfig
+	SMTP     SMTPConfig
 }
 
 type AppConfig struct {
@@ -63,10 +64,10 @@ type RedisConfig struct {
 }
 
 type JWTConfig struct {
-	Secret        string
-	AccessTTL     time.Duration
-	RefreshTTL    time.Duration
-	Issuer        string
+	Secret     string
+	AccessTTL  time.Duration
+	RefreshTTL time.Duration
+	Issuer     string
 }
 
 type GoogleConfig struct {
@@ -86,20 +87,20 @@ type WhatsAppConfig struct {
 }
 
 type SMSConfig struct {
-	Provider string // twilio | vonage | local
-	From     string
-	APIKey   string
+	Provider  string // twilio | vonage | local
+	From      string
+	APIKey    string
 	APISecret string
 }
 
 type StorageConfig struct {
-	Driver    string // local | s3
-	LocalPath string
-	PublicURL string
-	S3Bucket  string
-	S3Region  string
-	S3Key     string
-	S3Secret  string
+	Driver     string // local | s3
+	LocalPath  string
+	PublicURL  string
+	S3Bucket   string
+	S3Region   string
+	S3Key      string
+	S3Secret   string
 	S3Endpoint string
 }
 
@@ -109,6 +110,16 @@ type OTPConfig struct {
 	MaxAttempts  int
 	ResendWindow time.Duration
 	DailyCap     int
+}
+
+type SMTPConfig struct {
+	Host     string
+	Port     string
+	From     string
+	User     string
+	Password string
+	BaseURL  string
+	TTL      time.Duration
 }
 
 // Load reads configuration from the environment, applying defaults.
@@ -183,6 +194,15 @@ func Load() *Config {
 			MaxAttempts:  envInt("OTP_MAX_ATTEMPTS", 3),
 			ResendWindow: envDuration("OTP_RESEND_WINDOW", 60*time.Second),
 			DailyCap:     envInt("OTP_DAILY_CAP", 10),
+		},
+		SMTP: SMTPConfig{
+			Host:     env("SMTP_HOST", ""),
+			Port:     env("SMTP_PORT", "587"),
+			From:     env("SMTP_FROM", "noreply@zourleb.com"),
+			User:     env("SMTP_USER", ""),
+			Password: env("SMTP_PASSWORD", ""),
+			BaseURL:  env("SMTP_BASE_URL", "http://localhost:8080"),
+			TTL:      envDuration("SMTP_TTL", 24*time.Hour),
 		},
 	}
 }

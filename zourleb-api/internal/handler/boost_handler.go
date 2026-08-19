@@ -49,6 +49,30 @@ func (h *BoostHandler) List(c echo.Context) error {
 	return response.OK(c, rows)
 }
 
+// TrackImpression handles POST /boosts/:id/impressions.
+func (h *BoostHandler) TrackImpression(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	if err := h.boosts.TrackImpression(id); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"tracked": true})
+}
+
+// TrackClick handles POST /boosts/:id/clicks.
+func (h *BoostHandler) TrackClick(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	if err := h.boosts.TrackClick(id); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"tracked": true})
+}
+
 // Pay handles POST /agency/boosts/:id/pay.
 func (h *BoostHandler) Pay(c echo.Context) error {
 	id, err := paramUint(c, "id")

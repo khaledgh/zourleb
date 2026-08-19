@@ -4,6 +4,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/zourleb/zourleb-api/internal/models"
+	"github.com/zourleb/zourleb-api/pkg/pagination"
 )
 
 // PaymentRepository persists the polymorphic payments ledger.
@@ -37,6 +38,18 @@ func (r *PaymentRepository) FindByIdempotencyKey(key string) (*models.Payment, e
 func (r *PaymentRepository) UpdateStatus(id uint, status, providerRef string) error {
 	return r.db.Model(&models.Payment{}).Where("id = ?", id).
 		Updates(map[string]any{"status": status, "provider_ref": providerRef}).Error
+}
+
+// List returns a paginated list of all payments.
+func (r *PaymentRepository) List(p pagination.Params) ([]models.Payment, int64, error) {
+	q := r.db.Model(&models.Payment{}).Order("created_at desc")
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	var rows []models.Payment
+	err := q.Offset(p.Offset()).Limit(p.Limit()).Find(&rows).Error
+	return rows, total, err
 }
 
 // RevenueSummary aggregates paid revenue grouped by payable type (admin).

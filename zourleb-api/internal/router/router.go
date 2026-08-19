@@ -61,6 +61,8 @@ func registerAuth(g *echo.Group, c *app.Container) {
 	a.POST("/google", c.AuthH.Google)
 	a.POST("/refresh", c.AuthH.Refresh)
 	a.POST("/logout", c.AuthH.Logout)
+	a.POST("/email/resend", c.AuthH.EmailResend, c.Auth.Required())
+	a.POST("/email/verify", c.AuthH.EmailVerify)
 
 	// OTP — verify is auth-optional so it can attach the phone to a user
 	g.POST("/otp/request", c.OTP.Request)
@@ -78,6 +80,8 @@ func registerPublic(g *echo.Group, c *app.Container) {
 	g.GET("/regions", c.Catalog.Regions)
 	g.GET("/agencies/:slug", c.Catalog.GetAgency)
 	g.GET("/reviews", c.Engage.TourReviews)
+	g.POST("/boosts/:id/impressions", c.Boost.TrackImpression)
+	g.POST("/boosts/:id/clicks", c.Boost.TrackClick)
 }
 
 func registerMe(g *echo.Group, c *app.Container) {
@@ -179,7 +183,9 @@ func registerAdmin(g *echo.Group, c *app.Container) {
 	ad.GET("/tours", c.Admin.ListTours, c.Auth.RequirePermission("admin.user.manage"))
 
 	ad.GET("/boosts/pending", c.Admin.PendingBoosts, c.Auth.RequirePermission("admin.boost.manage"))
+	ad.GET("/payments", c.Admin.ListPayments, c.Auth.RequirePermission("admin.boost.manage"))
 	ad.POST("/payments/confirm", c.Admin.ConfirmPayment, c.Auth.RequirePermission("admin.boost.manage"))
+	ad.GET("/audit-logs", c.Admin.ListAuditLogs, c.Auth.RequirePermission("admin.analytics.view"))
 
 	ad.GET("/analytics", c.Admin.Analytics, c.Auth.RequirePermission("admin.analytics.view"))
 }

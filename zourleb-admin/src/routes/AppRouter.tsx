@@ -11,6 +11,8 @@ import { TranslationsPage } from "@/pages/Translations";
 import { BannersPage } from "@/pages/Banners";
 import { ReviewsPage } from "@/pages/Reviews";
 import { BoostsPage } from "@/pages/Boosts";
+import { PaymentsPage } from "@/pages/Payments";
+import { AuditLogsPage } from "@/pages/AuditLogs";
 import { AdminToursPage } from "@/pages/AdminTours";
 import { AgencyToursPage } from "@/pages/AgencyTours";
 import { AgencyBookingsPage } from "@/pages/AgencyBookings";
@@ -42,6 +44,8 @@ export const router = createBrowserRouter([
       { path: "banners", element: admin(<BannersPage />) },
       { path: "reviews", element: admin(<ReviewsPage />) },
       { path: "boosts", element: admin(<BoostsPage />) },
+      { path: "payments", element: admin(<PaymentsPage />) },
+      { path: "audit-logs", element: admin(<AuditLogsPage />) },
       { path: "tours", element: admin(<AdminToursPage />) },
       // agency portal
       { path: "agency/tours", element: agency(<AgencyToursPage />) },

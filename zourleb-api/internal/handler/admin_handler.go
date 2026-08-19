@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/labstack/echo/v4"
 
+	"github.com/zourleb/zourleb-api/internal/middleware"
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/service"
 	"github.com/zourleb/zourleb-api/pkg/pagination"
@@ -37,7 +38,7 @@ func (h *AdminHandler) ApproveAgency(c echo.Context) error {
 	if err := bindAndValidate(c, &req); err != nil {
 		return response.Fail(c, err)
 	}
-	if err := h.admin.ApproveAgency(id, req.Approve); err != nil {
+	if err := h.admin.ApproveAgency(id, req.Approve, middleware.UserID(c), c.RealIP()); err != nil {
 		return response.Fail(c, err)
 	}
 	return response.OK(c, map[string]bool{"approved": req.Approve})
@@ -315,6 +316,14 @@ func (h *AdminHandler) DeleteAgency(c echo.Context) error {
 
 // --- Boosts & payments ---
 
+func (h *AdminHandler) ListPayments(c echo.Context) error {
+	rows, meta, err := h.admin.ListPayments(pagination.FromQuery(c))
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OKMeta(c, rows, meta)
+}
+
 func (h *AdminHandler) PendingBoosts(c echo.Context) error {
 	rows, err := h.admin.PendingBoosts()
 	if err != nil {
@@ -342,7 +351,15 @@ func (h *AdminHandler) ConfirmPayment(c echo.Context) error {
 	return response.OK(c, map[string]bool{"confirmed": true})
 }
 
-// --- Analytics ---
+// --- Analytics & Audit ---
+
+func (h *AdminHandler) ListAuditLogs(c echo.Context) error {
+	rows, meta, err := h.admin.ListAuditLogs(pagination.FromQuery(c))
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OKMeta(c, rows, meta)
+}
 
 func (h *AdminHandler) Analytics(c echo.Context) error {
 	summary, err := h.admin.Analytics()

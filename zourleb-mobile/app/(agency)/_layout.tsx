@@ -17,6 +17,13 @@ export default function AgencyLayout() {
       />
       <Stack.Screen name="tours" options={{ title: "My Tours" }} />
       <Stack.Screen name="bookings" options={{ title: "Bookings" }} />
+      <Stack.Screen name="members" options={{ title: "Members" }} />
+      <Stack.Screen name="new-tour" options={{ title: "Create Tour" }} />
+      <Stack.Screen name="boosts" options={{ title: "Boosts" }} />
+      <Stack.Screen name="products" options={{ title: "Products" }} />
+      <Stack.Screen name="new-product" options={{ title: "Add Product" }} />
+      <Stack.Screen name="edit-agency" options={{ title: "Edit Agency" }} />
+      <Stack.Screen name="tour/[id]" options={{ title: "Tour" }} />
     </Stack>
   );
 }

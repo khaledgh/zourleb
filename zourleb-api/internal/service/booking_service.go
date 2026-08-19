@@ -24,11 +24,12 @@ type BookingService struct {
 	payments *repository.PaymentRepository
 	payReg   *payment.Registry
 	settings *SettingsService
+	notify   *NotificationService
 	defLang  string
 }
 
-func NewBookingService(b *repository.BookingRepository, t *repository.TourRepository, u *repository.UserRepository, pay *repository.PaymentRepository, reg *payment.Registry, s *SettingsService, defLang string) *BookingService {
-	return &BookingService{bookings: b, tours: t, users: u, payments: pay, payReg: reg, settings: s, defLang: defLang}
+func NewBookingService(b *repository.BookingRepository, t *repository.TourRepository, u *repository.UserRepository, pay *repository.PaymentRepository, reg *payment.Registry, s *SettingsService, n *NotificationService, defLang string) *BookingService {
+	return &BookingService{bookings: b, tours: t, users: u, payments: pay, payReg: reg, settings: s, notify: n, defLang: defLang}
 }
 
 // Create books a tour departure for a user. When booking.require_otp is on, the
@@ -45,6 +46,17 @@ func (s *BookingService) Create(ctx context.Context, userID uint, req models.Cre
 	contact, err := phone.Normalize(req.ContactPhone)
 	if err != nil {
 		return nil, response.ErrPhoneInvalid
+	}
+
+	// email-verification gate
+	if s.settings.Bool(models.SettingBookingEmail, false) {
+		u, err := s.users.FindByID(userID)
+		if err != nil {
+			return nil, response.ErrUnauthorized
+		}
+		if !u.EmailVerified() {
+			return nil, response.ErrEmailNotVerified
+		}
 	}
 
 	// phone-verification gate
@@ -109,6 +121,9 @@ func (s *BookingService) Create(ctx context.Context, userID uint, req models.Cre
 
 	title := s.tours.TitleFor(tour.ID, locale, s.defLang)
 	resp := models.NewBookingResponse(booking, title)
+	if s.notify != nil {
+		s.notify.Notify(ctx, userID, "booking.created", "Booking received", "Your booking "+booking.Code+" is awaiting payment.", map[string]any{"booking_code": booking.Code, "tour_title": title})
+	}
 	return &resp, nil
 }
 
@@ -177,6 +192,10 @@ func (s *BookingService) Pay(ctx context.Context, userID uint, code string, req 
 	_ = s.payments.UpdateStatus(pay.ID, string(res.Status), res.ProviderRef)
 	if res.Status == payment.StatusPaid {
 		_ = s.bookings.MarkPaid(b.ID)
+		if s.notify != nil {
+			title := s.tours.TitleFor(b.TourID, s.defLang, s.defLang)
+			s.notify.Notify(ctx, userID, "booking.paid", "Payment confirmed", "Your booking "+b.Code+" for "+title+" is confirmed.", map[string]any{"booking_code": b.Code, "tour_title": title})
+		}
 	}
 	return &models.PayResponse{PaymentID: pay.ID, Status: string(res.Status), RedirectURL: res.RedirectURL}, nil
 }

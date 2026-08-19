@@ -2,28 +2,34 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/zourleb/zourleb-api/config"
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/repository"
+	"github.com/zourleb/zourleb-api/pkg/cache"
 	"github.com/zourleb/zourleb-api/pkg/hash"
+	"github.com/zourleb/zourleb-api/pkg/mailer"
 	"github.com/zourleb/zourleb-api/pkg/oauth"
 	"github.com/zourleb/zourleb-api/pkg/response"
 	"github.com/zourleb/zourleb-api/pkg/token"
 )
 
-// AuthService implements registration, login, token issuance and Google sign-in.
+// AuthService implements registration, login, token issuance, email verification
+// and Google sign-in.
 type AuthService struct {
 	users  *repository.UserRepository
 	tokens *token.Manager
 	google *oauth.GoogleVerifier
 	cfg    *config.Config
+	cache  cache.Store
+	mailer mailer.Sender
 }
 
-func NewAuthService(users *repository.UserRepository, tm *token.Manager, gv *oauth.GoogleVerifier, cfg *config.Config) *AuthService {
-	return &AuthService{users: users, tokens: tm, google: gv, cfg: cfg}
+func NewAuthService(users *repository.UserRepository, tm *token.Manager, gv *oauth.GoogleVerifier, cfg *config.Config, c cache.Store, m mailer.Sender) *AuthService {
+	return &AuthService{users: users, tokens: tm, google: gv, cfg: cfg, cache: c, mailer: m}
 }
 
 type AuthContext struct {
@@ -60,6 +66,7 @@ func (s *AuthService) Register(ctx context.Context, req models.RegisterRequest, 
 		return nil, response.ErrInternal.Wrap(err)
 	}
 	s.assignTourist(u.ID)
+	_ = s.RequestEmailVerification(ctx, u.ID)
 
 	return s.issue(u, ac)
 }
@@ -208,6 +215,49 @@ func (s *AuthService) assignTourist(userID uint) {
 	if roleID, err := s.users.RoleIDByKey(models.RoleTourist); err == nil {
 		_ = s.users.AssignRole(userID, roleID, nil)
 	}
+}
+
+// emailVerifyKey returns the cache key for an email verification token.
+func emailVerifyKey(token string) string { return "email:verify:" + hash.SHA256(token) }
+
+// RequestEmailVerification generates a token and sends a verification email.
+func (s *AuthService) RequestEmailVerification(ctx context.Context, userID uint) error {
+	u, err := s.users.FindByID(userID)
+	if err != nil {
+		return response.ErrNotFound
+	}
+	if u.EmailVerified() {
+		return nil
+	}
+	token := mailer.Token()
+	if err := s.cache.Set(ctx, emailVerifyKey(token), fmt.Sprintf("%d", u.ID), s.cfg.SMTP.TTL); err != nil {
+		return response.ErrInternal.Wrap(err)
+	}
+	subject, body := mailer.LinkTemplate(s.cfg.SMTP.BaseURL, token, s.cfg.SMTP.TTL)
+	if err := s.mailer.Send(ctx, u.Email, subject, body); err != nil {
+		return response.ErrInternal.Wrap(err)
+	}
+	return nil
+}
+
+// VerifyEmail checks the token and marks the user's email as verified.
+func (s *AuthService) VerifyEmail(ctx context.Context, token string) error {
+	val, hit, err := s.cache.Get(ctx, emailVerifyKey(token))
+	if err != nil {
+		return response.ErrInternal.Wrap(err)
+	}
+	if !hit {
+		return response.ErrTokenInvalid
+	}
+	var id uint
+	if _, err := fmt.Sscanf(val, "%d", &id); err != nil {
+		return response.ErrTokenInvalid
+	}
+	_ = s.cache.Del(ctx, emailVerifyKey(token))
+	if err := s.users.MarkEmailVerified(id); err != nil {
+		return response.ErrInternal.Wrap(err)
+	}
+	return nil
 }
 
 func normalizeEmail(e string) string {

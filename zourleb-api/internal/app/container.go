@@ -12,6 +12,7 @@ import (
 	"github.com/zourleb/zourleb-api/internal/repository"
 	"github.com/zourleb/zourleb-api/internal/service"
 	"github.com/zourleb/zourleb-api/pkg/cache"
+	"github.com/zourleb/zourleb-api/pkg/mailer"
 	"github.com/zourleb/zourleb-api/pkg/oauth"
 	"github.com/zourleb/zourleb-api/pkg/onesignal"
 	"github.com/zourleb/zourleb-api/pkg/otp"
@@ -70,12 +71,14 @@ func New(cfg *config.Config, db *gorm.DB, log *slog.Logger) *Container {
 	paymentRepo := repository.NewPaymentRepository(db)
 	adminRepo := repository.NewAdminRepository(db)
 	shopRepo := repository.NewShopRepository(db)
+	auditRepo := repository.NewAuditRepository(db)
 
 	// --- infrastructure ---
 	tokens := token.NewManager(cfg.JWT.Secret, cfg.JWT.Issuer, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL)
 	google := oauth.NewGoogleVerifier(cfg.Google.ClientID)
 
 	store := buildCache(cfg, log)
+	mail := buildMailer(cfg, log)
 	dev := !cfg.IsProduction()
 	waClient := whatsapp.NewClient(cfg.WhatsApp.PhoneID, cfg.WhatsApp.Token, cfg.WhatsApp.TemplateOTP, dev, log)
 	smsClient := sms.NewClient(cfg.SMS.Provider, cfg.SMS.From, cfg.SMS.APIKey, cfg.SMS.APISecret, dev, log)
@@ -86,18 +89,19 @@ func New(cfg *config.Config, db *gorm.DB, log *slog.Logger) *Container {
 
 	// --- services ---
 	settingsSvc := service.NewSettingsService(i18nRepo)
-	authSvc := service.NewAuthService(userRepo, tokens, google, cfg)
+	auditSvc := service.NewAuditService(auditRepo)
+	authSvc := service.NewAuthService(userRepo, tokens, google, cfg, store, mail)
 	accountSvc := service.NewAccountService(userRepo, deviceRepo)
 	i18nSvc := service.NewI18nService(i18nRepo, cfg.App.DefaultLang)
 	otpSvc := service.NewOTPService(otpRepo, userRepo, store, dispatcher, cfg.OTP)
 	catalogSvc := service.NewCatalogService(catalogRepo, settingsSvc, cfg.App.DefaultLang)
-	bookingSvc := service.NewBookingService(bookingRepo, tourRepo, userRepo, paymentRepo, payReg, settingsSvc, cfg.App.DefaultLang)
 	engageSvc := service.NewEngagementService(engageRepo, settingsSvc)
 	notifySvc := service.NewNotificationService(notifRepo, pushClient)
-	agencySvc := service.NewAgencyService(agencyRepo, tourRepo, bookingRepo, userRepo, cfg.App.DefaultLang)
-	boostSvc := service.NewBoostService(boostRepo, paymentRepo, payReg)
+	bookingSvc := service.NewBookingService(bookingRepo, tourRepo, userRepo, paymentRepo, payReg, settingsSvc, notifySvc, cfg.App.DefaultLang)
+	agencySvc := service.NewAgencyService(agencyRepo, tourRepo, bookingRepo, userRepo, notifySvc, cfg.App.DefaultLang)
+	boostSvc := service.NewBoostService(boostRepo, paymentRepo, agencyRepo, payReg, notifySvc)
 	uploadSvc := service.NewUploadService(store0)
-	adminSvc := service.NewAdminService(adminRepo, agencyRepo, userRepo, i18nRepo, engageRepo, boostRepo, paymentRepo, settingsSvc, boostSvc)
+	adminSvc := service.NewAdminService(adminRepo, agencyRepo, userRepo, i18nRepo, engageRepo, boostRepo, paymentRepo, settingsSvc, boostSvc, auditSvc)
 	shopSvc := service.NewShopService(shopRepo, cfg.App.DefaultLang)
 
 	// --- middleware ---
@@ -148,4 +152,12 @@ func buildStorage(cfg *config.Config, log *slog.Logger) storage.Storage {
 		log.Error("storage init failed", "err", err)
 	}
 	return s
+}
+
+// buildMailer returns an SMTP client when configured, otherwise a logging sender.
+func buildMailer(cfg *config.Config, log *slog.Logger) mailer.Sender {
+	if cfg.SMTP.Host != "" {
+		return mailer.NewSMTPClient(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.From, cfg.SMTP.User, cfg.SMTP.Password)
+	}
+	return mailer.NewLogSender(log)
 }

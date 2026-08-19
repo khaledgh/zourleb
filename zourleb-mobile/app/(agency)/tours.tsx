@@ -1,4 +1,5 @@
 import { FlatList, Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiList, apiPost } from "@/api/client";
 import { Badge, Card, EmptyState, Loading } from "@/components/ui";
@@ -6,6 +7,7 @@ import { money } from "@/lib/format";
 import type { AgencyTour } from "@/types/api";
 
 export default function AgencyTours() {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
@@ -57,23 +59,31 @@ export default function AgencyTours() {
                 <Text className="text-sm font-bold text-brand-600">
                   {money(item.price_from, item.currency)}
                 </Text>
-                <Pressable
-                  onPress={() =>
-                    togglePublish.mutate({ id: item.id, publish: !isPublished })
-                  }
-                  disabled={togglePublish.isPending}
-                  className={`rounded-xl px-4 py-2 active:opacity-70 ${
-                    isPublished ? "bg-gray-100" : "bg-brand-500"
-                  }`}
-                >
-                  <Text
-                    className={`text-sm font-semibold ${
-                      isPublished ? "text-gray-700" : "text-white"
+                <View className="flex-row gap-2">
+                  <Pressable
+                    onPress={() => router.push(`/(agency)/tour/${item.id}`)}
+                    className="rounded-xl bg-gray-100 px-4 py-2 active:opacity-70"
+                  >
+                    <Text className="text-sm font-semibold text-gray-700">View</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() =>
+                      togglePublish.mutate({ id: item.id, publish: !isPublished })
+                    }
+                    disabled={togglePublish.isPending}
+                    className={`rounded-xl px-4 py-2 active:opacity-70 ${
+                      isPublished ? "bg-gray-100" : "bg-brand-500"
                     }`}
                   >
-                    {isPublished ? "Unpublish" : "Publish"}
-                  </Text>
-                </Pressable>
+                    <Text
+                      className={`text-sm font-semibold ${
+                        isPublished ? "text-gray-700" : "text-white"
+                      }`}
+                    >
+                      {isPublished ? "Unpublish" : "Publish"}
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             </View>
           </Card>

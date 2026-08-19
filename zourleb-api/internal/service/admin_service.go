@@ -25,6 +25,7 @@ type AdminService struct {
 	payments *repository.PaymentRepository
 	settings *SettingsService
 	boostSvc *BoostService
+	audit    *AuditService
 }
 
 func NewAdminService(
@@ -37,10 +38,12 @@ func NewAdminService(
 	payments *repository.PaymentRepository,
 	settings *SettingsService,
 	boostSvc *BoostService,
+	audit *AuditService,
 ) *AdminService {
 	return &AdminService{
 		admin: admin, agencies: agencies, users: users, i18n: i18n, engage: engage,
 		boosts: boosts, payments: payments, settings: settings, boostSvc: boostSvc,
+		audit: audit,
 	}
 }
 
@@ -54,7 +57,7 @@ func (s *AdminService) ListAgencies(status string, p pagination.Params) ([]model
 	return rows, pagination.NewMeta(p, total), nil
 }
 
-func (s *AdminService) ApproveAgency(id uint, approve bool) error {
+func (s *AdminService) ApproveAgency(id uint, approve bool, actorID uint, ip string) error {
 	status := models.AgencyStatusApproved
 	verified := approve
 	if !approve {
@@ -63,6 +66,9 @@ func (s *AdminService) ApproveAgency(id uint, approve bool) error {
 	if err := s.agencies.UpdateStatus(id, status, &verified); err != nil {
 		return response.ErrInternal.Wrap(err)
 	}
+	actor := &actorID
+	payload := map[string]any{"approved": approve, "status": status}
+	s.audit.Log(context.Background(), actor, "agency.approve", "agency", id, payload, ip)
 	return nil
 }
 
@@ -370,6 +376,14 @@ func (s *AdminService) ListTours(p pagination.Params, search, status string) ([]
 
 // --- Boost approvals / payment confirmation ---
 
+func (s *AdminService) ListPayments(p pagination.Params) ([]models.Payment, pagination.Meta, error) {
+	rows, total, err := s.payments.List(p)
+	if err != nil {
+		return nil, pagination.Meta{}, response.ErrInternal.Wrap(err)
+	}
+	return rows, pagination.NewMeta(p, total), nil
+}
+
 func (s *AdminService) PendingBoosts() ([]models.Boost, error) {
 	rows, err := s.boosts.PendingForAdmin()
 	if err != nil {
@@ -400,6 +414,14 @@ func (s *AdminService) ConfirmPayment(ctx context.Context, paymentID uint) error
 }
 
 // --- Analytics ---
+
+func (s *AdminService) ListAuditLogs(p pagination.Params) ([]models.AuditLog, pagination.Meta, error) {
+	rows, total, err := s.audit.List(p)
+	if err != nil {
+		return nil, pagination.Meta{}, response.ErrInternal.Wrap(err)
+	}
+	return rows, pagination.NewMeta(p, total), nil
+}
 
 func (s *AdminService) Analytics() (*models.AnalyticsSummary, error) {
 	users, _ := s.admin.Count(&models.User{})
