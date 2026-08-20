@@ -64,6 +64,19 @@ func (h *AgencyHandler) Members(c echo.Context) error {
 	return response.OK(c, rows)
 }
 
+// InviteMember handles POST /agency/members/invite.
+func (h *AgencyHandler) InviteMember(c echo.Context) error {
+	var req models.InviteAgencyMemberRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	m, err := h.agency.InviteMember(middleware.AgencyID(c), req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.Created(c, m)
+}
+
 // --- Tours ---
 
 func (h *AgencyHandler) ListTours(c echo.Context) error {

@@ -89,3 +89,10 @@ type RegisterDeviceRequest struct {
 	OneSignalPlayerID string `json:"onesignal_player_id" validate:"required,max=128"`
 	Platform          string `json:"platform" validate:"required,oneof=ios android web"`
 }
+
+// --- Agency ---
+
+type InviteAgencyMemberRequest struct {
+	Email   string `json:"email" validate:"required,email"`
+	RoleKey string `json:"role_key" validate:"required,oneof=agency_staff"`
+}

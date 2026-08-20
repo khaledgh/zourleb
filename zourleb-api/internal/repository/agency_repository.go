@@ -48,6 +48,15 @@ func (r *AgencyRepository) Members(agencyID uint) ([]models.AgencyMember, error)
 	return rows, err
 }
 
+// InviteMember inserts or updates an agency membership, preserving the
+// invited/joined timestamps and role on re-invite.
+func (r *AgencyRepository) InviteMember(m *models.AgencyMember) error {
+	return r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "agency_id"}, {Name: "user_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"role_id", "invited_at", "joined_at", "updated_at"}),
+	}).Create(m).Error
+}
+
 // --- Admin views ---
 
 func (r *AgencyRepository) ListByStatus(status string, p pagination.Params) ([]models.Agency, int64, error) {

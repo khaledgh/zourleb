@@ -122,6 +122,7 @@ func registerAgency(g *echo.Group, c *app.Container) {
 	ag.GET("/profile", c.Agency.Profile)
 	ag.PATCH("/profile", c.Agency.UpdateProfile, c.Auth.RequirePermission("agency.update"))
 	ag.GET("/members", c.Agency.Members)
+	ag.POST("/members/invite", c.Agency.InviteMember)
 
 	ag.GET("/tours", c.Agency.ListTours)
 	ag.POST("/tours", c.Agency.CreateTour, c.Auth.RequirePermission("tour.create"))

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/repository"
@@ -109,6 +110,48 @@ func (s *AgencyService) Members(agencyID uint) ([]models.AgencyMember, error) {
 		return nil, response.ErrInternal.Wrap(err)
 	}
 	return rows, nil
+}
+
+// InviteMember invites an existing platform user to join the agency staff.
+func (s *AgencyService) InviteMember(agencyID uint, req models.InviteAgencyMemberRequest) (*models.AgencyMember, error) {
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	u, err := s.users.FindByEmail(email)
+	if err != nil {
+		if repository.IsNotFound(err) {
+			return nil, response.ErrNotFound.WithMessage("No user with that email was found.")
+		}
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	if !u.IsActive() {
+		return nil, response.ErrAccountBlocked
+	}
+
+	roleID, err := s.users.RoleIDByKey(req.RoleKey)
+	if err != nil {
+		if repository.IsNotFound(err) {
+			return nil, response.ErrValidation.WithMessage("Invalid role key.")
+		}
+		return nil, response.ErrInternal.Wrap(err)
+	}
+
+	now := time.Now()
+	m := &models.AgencyMember{
+		AgencyID:  agencyID,
+		UserID:    u.ID,
+		RoleID:    roleID,
+		InvitedAt: &now,
+		JoinedAt:  &now,
+	}
+	m.CreatedAt = now
+	m.UpdatedAt = now
+
+	if err := s.agencies.InviteMember(m); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	if err := s.users.AssignRole(u.ID, roleID, &agencyID); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	return m, nil
 }
 
 // --- Tours ---
