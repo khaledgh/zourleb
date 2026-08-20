@@ -100,6 +100,7 @@ func registerBookings(g *echo.Group, c *app.Container) {
 	b.POST("", c.Booking.Create)
 	b.GET("", c.Booking.List)
 	b.GET("/:code", c.Booking.Get)
+	b.GET("/:code/voucher", c.Booking.Voucher)
 	b.POST("/:code/pay", c.Booking.Pay)
 	b.POST("/:code/cancel", c.Booking.Cancel)
 }

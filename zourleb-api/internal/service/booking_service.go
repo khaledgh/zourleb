@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/skip2/go-qrcode"
 	"github.com/zourleb/zourleb-api/internal/models"
 	"github.com/zourleb/zourleb-api/internal/repository"
 	"github.com/zourleb/zourleb-api/pkg/pagination"
@@ -150,6 +151,18 @@ func (s *BookingService) Get(userID uint, code, locale string) (*models.BookingR
 	title := s.tours.TitleFor(b.TourID, locale, s.defLang)
 	resp := models.NewBookingResponse(b, title)
 	return &resp, nil
+}
+
+// Voucher returns a QR code PNG for a paid booking.
+func (s *BookingService) Voucher(userID uint, code string) ([]byte, error) {
+	b, err := s.bookings.FindByCodeForUser(code, userID)
+	if err != nil {
+		return nil, response.ErrBookingNotFound
+	}
+	if b.PaymentStatus != models.PayStatusPaid {
+		return nil, response.ErrBadRequest.WithMessage("Booking must be paid to generate a voucher.")
+	}
+	return qrcode.Encode(b.Code, qrcode.Medium, 256)
 }
 
 // Pay initiates payment for a booking via the chosen provider. Manual/offline

@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 
 	"github.com/zourleb/zourleb-api/internal/middleware"
@@ -49,6 +51,15 @@ func (h *BookingHandler) Get(c echo.Context) error {
 		return response.Fail(c, err)
 	}
 	return response.OK(c, res)
+}
+
+// Voucher handles GET /bookings/:code/voucher.
+func (h *BookingHandler) Voucher(c echo.Context) error {
+	png, err := h.bookings.Voucher(middleware.UserID(c), c.Param("code"))
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return c.Blob(http.StatusOK, "image/png", png)
 }
 
 // Pay handles POST /bookings/:code/pay.
