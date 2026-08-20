@@ -413,6 +413,46 @@ func (s *AdminService) ConfirmPayment(ctx context.Context, paymentID uint) error
 	return nil
 }
 
+// --- Subscription Tiers ---
+
+func (s *AdminService) Tiers() ([]models.SubscriptionTier, error) {
+	return s.admin.AllTiers()
+}
+
+func (s *AdminService) CreateTier(req models.SaveSubscriptionTierRequest) (*models.SubscriptionTier, error) {
+	t := &models.SubscriptionTier{
+		Key: req.Key, Name: req.Name, Price: req.Price, Currency: req.Currency,
+		Description: req.Description, TourLimit: req.TourLimit, HasShop: req.HasShop, HasBoost: req.HasBoost,
+	}
+	if err := s.admin.CreateTier(t); err != nil {
+		return nil, response.ErrConflict.WithMessage("Tier key already exists.")
+	}
+	return t, nil
+}
+
+func (s *AdminService) UpdateTier(id uint, req models.SaveSubscriptionTierRequest) (*models.SubscriptionTier, error) {
+	t, err := s.admin.FindTier(id)
+	if err != nil {
+		return nil, response.ErrNotFound
+	}
+	t.Key = req.Key
+	t.Name = req.Name
+	t.Price = req.Price
+	t.Currency = req.Currency
+	t.Description = req.Description
+	t.TourLimit = req.TourLimit
+	t.HasShop = req.HasShop
+	t.HasBoost = req.HasBoost
+	if err := s.admin.SaveTier(t); err != nil {
+		return nil, response.ErrInternal.Wrap(err)
+	}
+	return t, nil
+}
+
+func (s *AdminService) DeleteTier(id uint) error {
+	return wrapInternal(s.admin.DeleteTier(id))
+}
+
 // --- Analytics ---
 
 func (s *AdminService) ListAuditLogs(p pagination.Params) ([]models.AuditLog, pagination.Meta, error) {

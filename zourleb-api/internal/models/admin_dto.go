@@ -54,10 +54,10 @@ type SaveBannerRequest struct {
 // --- Categories & Regions ---
 
 type SaveCategoryRequest struct {
-	Slug         string                 `json:"slug" validate:"required,max=120"`
-	Icon         string                 `json:"icon" validate:"omitempty,max=120"`
-	SortOrder    int                    `json:"sort_order"`
-	Translations []LocaleNameInput      `json:"translations" validate:"required,min=1,dive"`
+	Slug         string            `json:"slug" validate:"required,max=120"`
+	Icon         string            `json:"icon" validate:"omitempty,max=120"`
+	SortOrder    int               `json:"sort_order"`
+	Translations []LocaleNameInput `json:"translations" validate:"required,min=1,dive"`
 }
 
 type SaveRegionRequest struct {
@@ -91,12 +91,12 @@ type ConfirmPaymentRequest struct {
 
 // AnalyticsSummary is the platform dashboard payload.
 type AnalyticsSummary struct {
-	Users     int64              `json:"users"`
-	Agencies  int64              `json:"agencies"`
-	Tours     int64              `json:"tours"`
-	Bookings  int64              `json:"bookings"`
-	ActiveBoosts int64           `json:"active_boosts"`
-	Revenue   map[string]float64 `json:"revenue"`
+	Users        int64              `json:"users"`
+	Agencies     int64              `json:"agencies"`
+	Tours        int64              `json:"tours"`
+	Bookings     int64              `json:"bookings"`
+	ActiveBoosts int64              `json:"active_boosts"`
+	Revenue      map[string]float64 `json:"revenue"`
 }
 
 type AdminCreateUserRequest struct {
@@ -137,4 +137,17 @@ type AdminUpdateAgencyRequest struct {
 	Status           *string  `json:"status" validate:"omitempty,oneof=pending approved suspended"`
 	SubscriptionTier *string  `json:"subscription_tier" validate:"omitempty,max=32"`
 	CommissionRate   *float64 `json:"commission_rate" validate:"omitempty,min=0,max=100"`
+}
+
+// --- Subscription Tiers ---
+
+type SaveSubscriptionTierRequest struct {
+	Key         string  `json:"key" validate:"required,max=32"`
+	Name        string  `json:"name" validate:"required,max=120"`
+	Price       float64 `json:"price" validate:"min=0"`
+	Currency    string  `json:"currency" validate:"required,oneof=USD LBP"`
+	Description string  `json:"description" validate:"omitempty,max=1000"`
+	TourLimit   int     `json:"tour_limit" validate:"min=0"`
+	HasShop     bool    `json:"has_shop"`
+	HasBoost    bool    `json:"has_boost"`
 }

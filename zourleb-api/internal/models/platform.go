@@ -106,3 +106,16 @@ type AuditLog struct {
 	Payload    datatypes.JSON `json:"payload"`
 	IP         string         `gorm:"size:64" json:"ip"`
 }
+
+// SubscriptionTier is a named agency plan with limits and features.
+type SubscriptionTier struct {
+	Base
+	Key         string  `gorm:"size:32;uniqueIndex" json:"key"`
+	Name        string  `gorm:"size:120" json:"name"`
+	Price       float64 `gorm:"type:decimal(14,2)" json:"price"`
+	Currency    string  `gorm:"size:3" json:"currency"`
+	Description string  `gorm:"type:text" json:"description"`
+	TourLimit   int     `json:"tour_limit"`
+	HasShop     bool    `gorm:"default:false" json:"has_shop"`
+	HasBoost    bool    `gorm:"default:false" json:"has_boost"`
+}

@@ -351,6 +351,55 @@ func (h *AdminHandler) ConfirmPayment(c echo.Context) error {
 	return response.OK(c, map[string]bool{"confirmed": true})
 }
 
+// --- Subscription Tiers ---
+
+func (h *AdminHandler) Tiers(c echo.Context) error {
+	rows, err := h.admin.Tiers()
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, rows)
+}
+
+func (h *AdminHandler) CreateTier(c echo.Context) error {
+	var req models.SaveSubscriptionTierRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	t, err := h.admin.CreateTier(req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.Created(c, t)
+}
+
+func (h *AdminHandler) UpdateTier(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	var req models.SaveSubscriptionTierRequest
+	if err := bindAndValidate(c, &req); err != nil {
+		return response.Fail(c, err)
+	}
+	t, err := h.admin.UpdateTier(id, req)
+	if err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, t)
+}
+
+func (h *AdminHandler) DeleteTier(c echo.Context) error {
+	id, err := paramUint(c, "id")
+	if err != nil {
+		return response.Fail(c, response.ErrBadRequest)
+	}
+	if err := h.admin.DeleteTier(id); err != nil {
+		return response.Fail(c, err)
+	}
+	return response.OK(c, map[string]bool{"deleted": true})
+}
+
 // --- Analytics & Audit ---
 
 func (h *AdminHandler) ListAuditLogs(c echo.Context) error {

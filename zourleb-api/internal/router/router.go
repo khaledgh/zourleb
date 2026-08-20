@@ -187,6 +187,12 @@ func registerAdmin(g *echo.Group, c *app.Container) {
 	ad.GET("/boosts/pending", c.Admin.PendingBoosts, c.Auth.RequirePermission("admin.boost.manage"))
 	ad.GET("/payments", c.Admin.ListPayments, c.Auth.RequirePermission("admin.boost.manage"))
 	ad.POST("/payments/confirm", c.Admin.ConfirmPayment, c.Auth.RequirePermission("admin.boost.manage"))
+
+	ad.GET("/subscription-tiers", c.Admin.Tiers, c.Auth.RequirePermission("admin.tier.manage"))
+	ad.POST("/subscription-tiers", c.Admin.CreateTier, c.Auth.RequirePermission("admin.tier.manage"))
+	ad.PUT("/subscription-tiers/:id", c.Admin.UpdateTier, c.Auth.RequirePermission("admin.tier.manage"))
+	ad.DELETE("/subscription-tiers/:id", c.Admin.DeleteTier, c.Auth.RequirePermission("admin.tier.manage"))
+
 	ad.GET("/audit-logs", c.Admin.ListAuditLogs, c.Auth.RequirePermission("admin.analytics.view"))
 
 	ad.GET("/analytics", c.Admin.Analytics, c.Auth.RequirePermission("admin.analytics.view"))

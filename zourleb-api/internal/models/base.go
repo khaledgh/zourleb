@@ -30,7 +30,7 @@ func AllModels() []interface{} {
 		&User{}, &Role{}, &Permission{}, &RolePermission{}, &UserRole{},
 		&RefreshToken{},
 		// agencies
-		&Agency{}, &AgencyTranslation{}, &AgencyMember{},
+		&Agency{}, &AgencyTranslation{}, &AgencyMember{}, &SubscriptionTier{},
 		// catalog
 		&Region{}, &RegionTranslation{},
 		&Category{}, &CategoryTranslation{},

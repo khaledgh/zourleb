@@ -141,3 +141,27 @@ func (r *AdminRepository) ListTours(p pagination.Params, search, status string) 
 	err := q.Order("created_at desc").Offset(p.Offset()).Limit(p.Limit()).Find(&rows).Error
 	return rows, total, err
 }
+
+// --- Subscription Tiers ---
+
+func (r *AdminRepository) AllTiers() ([]models.SubscriptionTier, error) {
+	var rows []models.SubscriptionTier
+	err := r.db.Order("sort_order asc, id asc").Find(&rows).Error
+	return rows, err
+}
+
+func (r *AdminRepository) CreateTier(t *models.SubscriptionTier) error { return r.db.Create(t).Error }
+
+func (r *AdminRepository) SaveTier(t *models.SubscriptionTier) error { return r.db.Save(t).Error }
+
+func (r *AdminRepository) FindTier(id uint) (*models.SubscriptionTier, error) {
+	var t models.SubscriptionTier
+	if err := r.db.First(&t, id).Error; err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
+func (r *AdminRepository) DeleteTier(id uint) error {
+	return r.db.Delete(&models.SubscriptionTier{}, id).Error
+}
